@@ -1,23 +1,4 @@
-// const { exec } = require('child_process');
-
-// const main = () => {
-//   console.log('bash start');
-//   exec('bash sign-in.sh', (error, stdout, stderr) => {
-//     if (error) {
-//       console.error(`error: ${error.message}`);
-//       return;
-//     }
-
-//     if (stderr) {
-//       console.error(`stderr: ${stderr}`);
-//       return;
-//     }
-
-//     console.log(`stdout:\n${stdout}`);
-//   });
-// }
-
-// main();
+const chalk = require("chalk");
 const { createConnection } = require('net');
 
 const socket = createConnection(5555);
@@ -34,10 +15,12 @@ const main = (clientId) => {
     process.exit();
   })
 
+  process.stdin.setEncoding('utf8');
+
   process.stdin.on('data', (chunk) => {
-    const modifiedChunk = JSON.parse(chunk).trim().split(',');
-    const [id, fa] = modifiedChunk;
-    const obj = { id: id, name: process.argv[2], findActive: fa };
+    const modifiedChunk = chunk.trim().split(',');
+    const [id, findActive] = modifiedChunk;
+    const obj = { id, name: process.argv[2], findActive };
     socket.write(JSON.stringify(obj));
   })
 

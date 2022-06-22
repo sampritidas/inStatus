@@ -1,9 +1,11 @@
+const chalk = require("chalk");
+
 const fs = require('fs');
 const { access } = require('fs/promises');
 const { createServer } = require('net');
 
 const clients = []; //socket
-const activeClints = []; //clientAddress,id
+const activeClients = []; //clientAddress,id
 const maxClients = 9;
 
 const BroadcastChannel = (clientData) => {
@@ -24,11 +26,9 @@ const registerId = (id) => {
   }
 };
 
-const activePerson = () => {
-
-};
-
 const server = createServer((socket) => {
+  console.log(chalk.blue('Client connected'));
+
   const clientAddress = `${socket.remoteAddress}  :  ${socket.remotePort}`;
   clients.push(socket);
 
@@ -36,10 +36,17 @@ const server = createServer((socket) => {
 
   socket.on('data', (data) => {
     const parsedData = JSON.parse(data);
-    const activeClint = {
+
+    const activeClient = {
       clientAddress, id: parsedData.id, name: parsedData.name
     }
-    activeClints.push(activeClint);
+    activeClients.push(activeClient);
+
+    if (parsedData.findActive + '' === 'on') {
+      activeClients.forEach(client => {
+        socket.write(`🟢 ${client.name} is on\n`)
+      })
+    }
     // registerId(id);
     // activePerson(id);
     // if (findActive === on) {
@@ -50,14 +57,14 @@ const server = createServer((socket) => {
   })
 
 
-  socket.on('close', (data) => {
-    const index = activeClints.findIndex(client => {
+  socket.on('close', () => {
+    const index = activeClients.findIndex(client => {
       return JSON.parse(JSON.stringify(client)).clientAddress === clientAddress;
     })
 
-    const disconnecter = activeClints[index].name;
+    const disconnecter = activeClients[index].name;
 
-    if (index !== -1) activeClints.splice(index, 1);
+    if (index !== -1) activeClients.splice(index, 1);
 
     clients.forEach((socket) => {
       socket.write(`${disconnecter} is disconnected`);
@@ -77,8 +84,3 @@ const server = createServer((socket) => {
 });
 
 server.listen(5555);
-
-// server.on('connection', (socket) => {
-//   const clientAddress = `${socket.remoteAddress}  :  ${socket.remotePort}`;
-//   console.log(`new client connected: ${clientAddress}`);
-// });
